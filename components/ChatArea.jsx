@@ -10,6 +10,7 @@ export default function ChatArea({
   sendMessage,
   connected,
   setShowCodeModal,
+  setShowNewRoomModal,
 }) {
   return (
     <main className="flex-1 flex flex-col border-r border-white/10">
@@ -22,7 +23,11 @@ export default function ChatArea({
           <button className="px-3 py-1 rounded bg-slate-800 border border-slate-700 text-sm">
             Create Invite
           </button>
-          <button className="px-3 py-1 rounded bg-gradient-to-br from-indigo-600 to-purple-600 text-sm">
+         <button 
+            onClick={() => setShowNewRoomModal(true)} // <-- ADD ONCLICK
+            disabled={!connected} // <-- DISABLE IF NOT LOGGED IN
+            className="px-3 py-1 rounded bg-gradient-to-br from-indigo-600 to-purple-600 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             New Room
           </button>
         </div>

@@ -6,6 +6,7 @@ import RightPanel from "../components/RightPanel";
 import CodeModal from "../components/CodeModal";
 import { ethers } from "ethers"; // <-- IMPORT ETHERS
 import { SiweMessage } from "siwe"; // <-- IMPORT SIWE
+import NewRoomModal from "../components/NewRoomModal";
 // No need to import ethers here for this basic connection
 
 export default function Page() {
@@ -21,6 +22,7 @@ export default function Page() {
   const [input, setInput] = useState("");
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [codeSnippet, setCodeSnippet] = useState({ lang: "javascript", code: "" });
+  const [showNewRoomModal, setShowNewRoomModal] = useState(false);
   // FROM:
   // const connectWallet = () => setConnected(true);
 
@@ -118,6 +120,19 @@ const signIn = async () => {
     }
   };
 
+  const createRoom = (roomName) => {
+    if (!roomName.trim() || rooms.includes(roomName)) {
+      alert("Invalid or duplicate room name.");
+      return;
+    }
+    // Add the new room to the list
+    setRooms((prevRooms) => [...prevRooms, roomName]);
+    // Select the new room
+    setSelectedRoom(roomName);
+    // Close the modal
+    setShowNewRoomModal(false);
+  };
+
   const sendMessage = () => {
     if (!input.trim()) return;
     setMessages((m) => [
@@ -169,6 +184,7 @@ const signIn = async () => {
         sendMessage={sendMessage}
         connected={isAuthenticated}        
         setShowCodeModal={setShowCodeModal}
+        setShowNewRoomModal={setShowNewRoomModal}
       />
       
       <RightPanel />
@@ -179,6 +195,12 @@ const signIn = async () => {
           setCodeSnippet={setCodeSnippet}
           attachCode={attachCode}
           setShowCodeModal={setShowCodeModal}
+        />
+      )}
+      {showNewRoomModal && (
+        <NewRoomModal
+          setShowNewRoomModal={setShowNewRoomModal}
+          createRoom={createRoom}
         />
       )}
     </div>
