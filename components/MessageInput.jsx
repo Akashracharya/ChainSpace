@@ -1,5 +1,5 @@
 'use client'
-
+import { Code } from 'lucide-react';
 
 export default function MessageInput({
   input,
@@ -14,18 +14,14 @@ export default function MessageInput({
       <button
         title="Attach code snippet"
         onClick={() => setShowCodeModal(true)}
-        className="p-2 rounded-md hover:bg-slate-800"
+        className="p-2 rounded-md transition-colors hover:bg-white/10 text-slate-400 hover:text-slate-100"
       >
-        {"</>"}
+        <Code className="w-5 h-5" /> {/* Use the icon here */}
       </button>
 
       <input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        className="flex-1 bg-transparent border border-slate-800 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-        placeholder={connected ? "Message #" + selectedRoom : "Connect wallet to chat"}
-        disabled={!connected}
-        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+        // ...props
+        className="flex-1 bg-white/5 border border-white/10 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600"
       />
 
       <button onClick={sendMessage} className="px-4 py-2 rounded bg-indigo-600">
