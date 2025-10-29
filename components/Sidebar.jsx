@@ -6,13 +6,19 @@ export default function Sidebar({
   selectedRoom,
   setSelectedRoom,
   rooms,
+  account,
 }) {
+  const formatAddress = (addr) => {
+    if (!addr) return "Not connected";
+    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+  };
   return (
     <aside className="w-64 p-4 border-r border-white/10">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold">ChainSpace</h2>
         <button
           onClick={connectWallet}
+          disabled={connected}
           className={`px-3 py-1 text-sm rounded-md border ${
             connected
               ? "bg-slate-800 border-slate-700"
@@ -44,7 +50,7 @@ export default function Sidebar({
       <div className="mt-6 text-xs text-slate-400">
         <div>Logged in as:</div>
         <div className="mt-1 p-2 bg-slate-800 rounded">
-          {connected ? "you.eth" : "Not connected"}
+          {formatAddress(account)}
         </div>
       </div>
     </aside>
