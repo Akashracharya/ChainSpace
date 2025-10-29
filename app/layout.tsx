@@ -14,7 +14,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${jetbrains.variable} font-mono bg-slate-900 text-slate-100`}>
+      <body className={`${jetbrains.variable} font-mono text-slate-100 flex items-center justify-center min-h-screen p-4`}>
         {children}
       </body>
     </html>

@@ -10,7 +10,7 @@ export default function MessageInput({
   selectedRoom,
 }) {
   return (
-    <div className="p-4 border-t border-slate-800 bg-slate-900/60 flex items-start gap-3">
+    <div className="p-4 border-t border-white/10 flex items-start gap-3">
       <button
         title="Attach code snippet"
         onClick={() => setShowCodeModal(true)}

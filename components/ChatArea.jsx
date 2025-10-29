@@ -12,7 +12,7 @@ export default function ChatArea({
   setShowCodeModal,
 }) {
   return (
-    <main className="flex-1 flex flex-col border-r border-slate-800 bg-slate-900/40 backdrop-blur-md">
+    <main className="flex-1 flex flex-col border-r border-white/10">
       <header className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
         <div>
           <h3 className="text-xl font-semibold">#{selectedRoom}</h3>

@@ -6,10 +6,16 @@
   --accent: #7c3aed;
 }
 
-html, body {
-  height: 100%;
-}
+
 
 .font-mono {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;
+}
+
+
+/* ADD THIS: */
+body {
+  background-color: #0f172a; /* fallback bg-slate-900 */
+  background-image: radial-gradient(circle at 10% 10%, #4f46e5 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, #7c3aed 0%, transparent 40%);
 }

@@ -8,7 +8,7 @@ export default function Sidebar({
   rooms,
 }) {
   return (
-    <aside className="w-64 p-4 border-r border-slate-800 bg-slate-900/60 backdrop-blur-md">
+    <aside className="w-64 p-4 border-r border-white/10">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold">ChainSpace</h2>
         <button
