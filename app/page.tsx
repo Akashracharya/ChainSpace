@@ -27,18 +27,21 @@ export default function Page() {
 
   const attachCode = () => {
     if (!codeSnippet.code.trim()) return;
+    // Create a new message with type: 'code'
     setMessages((m) => [
       ...m,
       {
         id: Date.now(),
         user: "you.eth",
-        text: `\n\`\`\`${codeSnippet.lang}\n${codeSnippet.code}\n\`\`\``,
+        type: "code",
+        lang: codeSnippet.lang,
+        text: codeSnippet.code,
       },
     ]);
     setShowCodeModal(false);
     setCodeSnippet({ lang: "javascript", code: "" });
   };
-
+  
   return (
    <div className="w-full max-w-7xl h-[90vh] flex rounded-2xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-2xl shadow-2xl">
   <Sidebar
