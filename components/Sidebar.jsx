@@ -33,15 +33,18 @@ export default function Sidebar({
       <nav className="space-y-2">
         {rooms.map((r) => (
           <button
-            key={r}
-            onClick={() => setSelectedRoom(r)}
-            className={`w-full text-left px-3 py-2 rounded-md hover:bg-slate-800 ${
-              selectedRoom === r ? "bg-slate-800" : ""
+            key={r.id}
+            onClick={() => setSelectedRoom(r.id)} // Call with room id
+            className={`w-full text-left px-3 py-2 rounded-md transition-colors hover:bg-white/10 ${
+              selectedRoom === r.id ? "bg-white/20" : "" // Compare with r.id
             }`}
           >
             <div className="flex items-center justify-between">
-              <span>{r}</span>
-              {r !== "general" && <span className="text-xs text-slate-500">🔒</span>}
+              <span>{r.id}</span>
+              {/* Show lock if not public */}
+              {!r.members.includes("everyone") && (
+                <span className="text-xs text-slate-500">🔒</span>
+              )}
             </div>
           </button>
         ))}

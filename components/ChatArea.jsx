@@ -3,6 +3,7 @@ import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 
 export default function ChatArea({
+  room,
   selectedRoom,
   messages,
   input,
@@ -11,21 +12,32 @@ export default function ChatArea({
   connected,
   setShowCodeModal,
   setShowNewRoomModal,
+  setShowInviteModal, // <-- RECEIVE NEW PROP
+  isOwner,
 }) {
+  const isPublic = room.members.includes("everyone");
+
   return (
     <main className="flex-1 flex flex-col border-r border-white/10">
-      <header className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+      <header className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-semibold">#{selectedRoom}</h3>
-          <p className="text-sm text-slate-400">Private room — secure invites only</p>
+          <h3 className="text-xl font-semibold">#{room.id}</h3>
+          <p className="text-sm text-slate-400">
+            {/* Show room privacy status */}
+            {isPublic ? "Public Room" : "Private Room - Members Only"}
+          </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="px-3 py-1 rounded bg-slate-800 border border-slate-700 text-sm">
+          <button 
+            onClick={() => setShowInviteModal(true)} // <-- ADD ONCLICK
+            disabled={!connected || isPublic || !isOwner} // <-- ADD LOGIC
+            className="px-3 py-1 rounded bg-slate-800 border border-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Create Invite
           </button>
-         <button 
-            onClick={() => setShowNewRoomModal(true)} // <-- ADD ONCLICK
-            disabled={!connected} // <-- DISABLE IF NOT LOGGED IN
+          <button 
+            onClick={() => setShowNewRoomModal(true)}
+            disabled={!connected}
             className="px-3 py-1 rounded bg-gradient-to-br from-indigo-600 to-purple-600 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             New Room
@@ -41,7 +53,7 @@ export default function ChatArea({
         sendMessage={sendMessage}
         connected={connected}
         setShowCodeModal={setShowCodeModal}
-        selectedRoom={selectedRoom}
+        selectedRoom={room.id} // Pass room.id here
       />
     </main>
   );

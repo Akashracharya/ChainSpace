@@ -7,14 +7,21 @@ import CodeModal from "../components/CodeModal";
 import { ethers } from "ethers"; // <-- IMPORT ETHERS
 import { SiweMessage } from "siwe"; // <-- IMPORT SIWE
 import NewRoomModal from "../components/NewRoomModal";
+import InviteModal from "../components/InviteModal";
 // No need to import ethers here for this basic connection
 
 export default function Page() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [account, setAccount] = useState(""); // <-- ADD THIS STATE
   const [selectedRoom, setSelectedRoom] = useState("general");
-  const [rooms, setRooms] = useState(["general", "dev-chat", "private-ideas"]);
-  // ...other states
+  const [rooms, setRooms] = useState([
+    {
+      id: "general",
+      owner: "system", // 'system' means no one owns it
+      members: ["everyone"], // 'everyone' means it's a public room
+    },
+  ]);
+
   const [messages, setMessages] = useState([
     { id: 1, user: "alice.eth", text: "Welcome to the room!", type: "text" },
     { id: 2, user: "bob.eth", text: "Share your snippet using the </> button.", type: "text" },
@@ -23,6 +30,8 @@ export default function Page() {
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [codeSnippet, setCodeSnippet] = useState({ lang: "javascript", code: "" });
   const [showNewRoomModal, setShowNewRoomModal] = useState(false);
+
+  const [showInviteModal, setShowInviteModal] = useState(false);
   // FROM:
   // const connectWallet = () => setConnected(true);
 
@@ -121,17 +130,68 @@ const signIn = async () => {
   };
 
   const createRoom = (roomName) => {
-    if (!roomName.trim() || rooms.includes(roomName)) {
+    if (!roomName.trim() || rooms.find(r => r.id === roomName)) {
       alert("Invalid or duplicate room name.");
       return;
     }
-    // Add the new room to the list
-    setRooms((prevRooms) => [...prevRooms, roomName]);
-    // Select the new room
+    
+    // Create new room object
+    const newRoom = {
+      id: roomName,
+      owner: account, // The authenticated user is the owner
+      members: [account], // The owner is the first member
+    };
+
+    setRooms((prevRooms) => [...prevRooms, newRoom]);
     setSelectedRoom(roomName);
-    // Close the modal
     setShowNewRoomModal(false);
   };
+
+  const handleSetSelectedRoom = (roomName) => {
+    const room = rooms.find(r => r.id === roomName);
+    if (!room) return;
+
+    // Check for access
+    const isPublic = room.members.includes("everyone");
+    const isMember = room.members.includes(account);
+
+    if (isPublic || isMember) {
+      setSelectedRoom(roomName);
+    } else {
+      alert("Access Denied: You are not a member of this private room.");
+    }
+  };
+
+  const inviteToRoom = (userAddress) => {
+    if (!userAddress.trim()) {
+      alert("Invalid address");
+      return;
+    }
+
+    setRooms(currentRooms => 
+      currentRooms.map(room => {
+        // Find the selected room
+        if (room.id === selectedRoom) {
+          // Check if user is already a member
+          if (room.members.includes(userAddress)) {
+            alert("User is already a member.");
+            return room;
+          }
+          // Add new member
+          return {
+            ...room,
+            members: [...room.members, userAddress],
+          };
+        }
+        return room;
+      })
+    );
+    
+    alert(`Address ${userAddress.substring(0, 6)}... invited!`);
+    setShowInviteModal(false);
+  };
+
+
 
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -165,18 +225,21 @@ const signIn = async () => {
     setCodeSnippet({ lang: "javascript", code: "" });
   };
 
+  const currentRoom = rooms.find(r => r.id === selectedRoom) || rooms[0];
+
   return (
     <div className="w-full max-w-7xl h-[90vh] flex rounded-2xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-2xl shadow-2xl">
       <Sidebar
         connected={isAuthenticated} // Pass isAuthenticated
         connectWallet={signIn}
         selectedRoom={selectedRoom}
-        setSelectedRoom={setSelectedRoom}
+        setSelectedRoom={handleSetSelectedRoom}
         rooms={rooms}
         account={account} // <-- PASS THE ACCOUNT PROP
       />
 
       <ChatArea
+        room={currentRoom}
         selectedRoom={selectedRoom}
         messages={messages}
         input={input}
@@ -185,6 +248,8 @@ const signIn = async () => {
         connected={isAuthenticated}        
         setShowCodeModal={setShowCodeModal}
         setShowNewRoomModal={setShowNewRoomModal}
+        setShowInviteModal={setShowInviteModal} // <-- PASS NEW PROP
+        isOwner={currentRoom.owner === account}
       />
       
       <RightPanel />
@@ -201,6 +266,12 @@ const signIn = async () => {
         <NewRoomModal
           setShowNewRoomModal={setShowNewRoomModal}
           createRoom={createRoom}
+        />
+      )}
+      {showInviteModal && (
+        <InviteModal
+          setShowInviteModal={setShowInviteModal}
+          inviteToRoom={inviteToRoom}
         />
       )}
     </div>
