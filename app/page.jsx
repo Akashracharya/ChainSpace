@@ -7,6 +7,7 @@ import CodeModal from "../components/CodeModal";
 
 export default function Page() {
   const [connected, setConnected] = useState(false);
+  const [account, setAccount] = useState("");
   const [selectedRoom, setSelectedRoom] = useState("general");
   const [rooms, setRooms] = useState(["general", "dev-chat", "private-ideas"]);
   const [messages, setMessages] = useState([
@@ -17,22 +18,52 @@ export default function Page() {
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [codeSnippet, setCodeSnippet] = useState({ lang: "javascript", code: "" });
 
-  const connectWallet = () => setConnected(true);
+  const connectWallet = async () => {
+    try {
+      // Check if MetaMask (or other browser wallet) is installed
+      if (!window.ethereum) {
+        alert("Please install MetaMask to use this app.");
+        return;
+      }
+      
+      // Request account access
+      const accounts = await window.ethereum.request({ 
+        method: "eth_requestAccounts" 
+      });
+      
+      if (accounts.length > 0) {
+        setAccount(accounts[0]); // Store the user's address
+        setConnected(true);     // Set connected state
+      }
+    } catch (error) {
+      console.error("Error connecting wallet:", error);
+      alert("Failed to connect wallet. Please try again.");
+    }
+  };
 
   const sendMessage = () => {
     if (!input.trim()) return;
-    setMessages((m) => [...m, { id: Date.now(), user: "you.eth", text: input }]);
+    setMessages((m) => [
+      ...m, 
+      { 
+        id: Date.now(), 
+        // Use the real address if available, otherwise "you.eth"
+        user: account ? `${account.substring(0, 6)}...${account.substring(account.length - 4)}` : "you.eth", 
+        type: "text", 
+        text: input 
+      }
+    ]);
     setInput("");
   };
 
   const attachCode = () => {
     if (!codeSnippet.code.trim()) return;
-    // Create a new message with type: 'code'
     setMessages((m) => [
       ...m,
       {
         id: Date.now(),
-        user: "you.eth",
+        // Use the real address if available
+        user: account ? `${account.substring(0, 6)}...${account.substring(account.length - 4)}` : "you.eth",
         type: "code",
         lang: codeSnippet.lang,
         text: codeSnippet.code,
@@ -50,6 +81,7 @@ export default function Page() {
         selectedRoom={selectedRoom}
         setSelectedRoom={setSelectedRoom}
         rooms={rooms}
+        account={account} // <-- PASS THE ACCOUNT PROP
       />
 
       <ChatArea
