@@ -1,0 +1,109 @@
+# =========================
+# Node & Next.js Standard
+# =========================
+
+# Node modules
+node_modules/
+
+# Build output
+.next/
+out/
+dist/
+
+# Static build cache
+.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+.pnpm-debug.log
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# Editor & System Files
+# =========================
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# OS & Cache Directories
+# =========================
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Windows
+ehthumbs.db
+Desktop.ini
+
+# =========================
+# Tailwind & TypeScript
+# =========================
+
+# Tailwind cache
+tailwind.config.backup.js
+
+# TypeScript build info
+*.tsbuildinfo
+
+# =========================
+# Hardhat / Blockchain Dev
+# =========================
+
+# Hardhat artifacts and cache
+artifacts/
+cache/
+typechain/
+typechain-types/
+
+# Temporary blockchain data
+local-chain-data/
+hardhat-network-helpers/
+.deployments/
+
+# Private keys / sensitive configs
+secrets.json
+wallet.json
+privateKey.txt
+
+# =========================
+# Misc
+# =========================
+
+# Generated files
+*.bak
+*.tmp
+*.orig
+
+# Optional lockfiles (optional, keep one)
+# yarn.lock
+# pnpm-lock.yaml
+
+# VSCode settings (if team doesn’t share)
+.vscode/settings.json
