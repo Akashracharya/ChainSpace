@@ -15,7 +15,7 @@ export default function ChatArea({
   setShowInviteModal, // <-- RECEIVE NEW PROP
   isOwner,
 }) {
-  const isPublic = room.members.includes("everyone");
+const isPublic = room?.members?.includes("everyone") ?? false;
 
   return (
     <main className="flex-1 flex flex-col border-r border-white/10">

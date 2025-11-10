@@ -42,7 +42,7 @@ export default function MessageInput({
       />
 
       <button
-        onClick={sendMessage}
+        onClick={() => sendMessage()}
         disabled={isSendDisabled} // Use new variable
         className={`px-4 py-2 rounded font-medium transition-colors ${
           isSendDisabled

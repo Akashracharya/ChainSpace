@@ -1,241 +1,283 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import ChatArea from "../components/ChatArea";
 import RightPanel from "../components/RightPanel";
 import CodeModal from "../components/CodeModal";
-import { ethers } from "ethers"; // <-- IMPORT ETHERS
-import { SiweMessage } from "siwe"; // <-- IMPORT SIWE
 import NewRoomModal from "../components/NewRoomModal";
 import InviteModal from "../components/InviteModal";
-// No need to import ethers here for this basic connection
+import { ethers } from "ethers";
+import { SiweMessage } from "siwe";
+import { getContract } from "../lib/blockchain";
+import { supabase } from "../lib/supabase";
 
 export default function Page() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [account, setAccount] = useState(""); // <-- ADD THIS STATE
+  const [account, setAccount] = useState("");
   const [selectedRoom, setSelectedRoom] = useState("general");
+
   const [rooms, setRooms] = useState([
-    {
-      id: "general",
-      owner: "system", // 'system' means no one owns it
-      members: ["everyone"], // 'everyone' means it's a public room
-    },
+    { id: "general", name: "General", owner: "system", members: ["everyone"], createdAt: Date.now() }
   ]);
 
-  const [messages, setMessages] = useState([
-    { id: 1, user: "alice.eth", text: "Welcome to the room!", type: "text" },
-    { id: 2, user: "bob.eth", text: "Share your snippet using the </> button.", type: "text" },
-  ]);
+  // ✅ Load rooms from Supabase (after wallet login)
+useEffect(() => {
+  if (!isAuthenticated) return;
+
+  const loadRooms = async () => {
+    const res = await fetch(`/api/rooms?address=${account}`);
+    const { rooms } = await res.json();
+
+    // Replace existing rooms with rooms from DB
+    setRooms(prev => {
+  const merged = [...prev, ...rooms];
+
+  const unique = merged.reduce((acc, room) => {
+    acc[room.id] = room;  // overwrites duplicates
+    return acc;
+  }, {});
+
+  return Object.values(unique);
+});
+
+
+  };
+
+  loadRooms();
+}, [isAuthenticated]);
+
+
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [codeSnippet, setCodeSnippet] = useState({ lang: "javascript", code: "" });
+
   const [showNewRoomModal, setShowNewRoomModal] = useState(false);
-
   const [showInviteModal, setShowInviteModal] = useState(false);
-  // FROM:
-  // const connectWallet = () => setConnected(true);
 
-  // TO: (Replace with this async function)
-  const connectWallet = async () => {
-    try {
-      // Check if MetaMask (or other browser wallet) is installed
-      if (!window.ethereum) {
-        alert("Please install MetaMask to use this app.");
-        return;
-      }
-      
-      // Request account access
-      const accounts = await window.ethereum.request({ 
-        method: "eth_requestAccounts" 
-      });
-      
-      if (accounts.length > 0) {
-        setAccount(accounts[0]); // Store the user's address
-        setConnected(true);     // Set connected state
-      }
-    } catch (error) {
-      console.error("Error connecting wallet:", error);
-      alert("Failed to connect wallet. Please try again.");
-    }
+  // Load messages when room changes
+  useEffect(() => {
+  if (!selectedRoom) return;
+
+  const load = async () => {
+    const { data } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("room_id", selectedRoom)
+      .order("created_at", { ascending: true });
+
+    setMessages(data || []);
   };
-const signIn = async () => {
-    console.log("--- signIn started ---");
 
+  load();
+}, [selectedRoom]);
+
+// Real-time subscription → updates message list when new message is inserted
+useEffect(() => {
+  if (!selectedRoom) return;
+
+  const channel = supabase
+    .channel(`messages-${selectedRoom}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `room_id=eq.${selectedRoom}`,
+      },
+      (payload) => {
+        setMessages((prev) => [...prev, payload.new]);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [selectedRoom]);
+
+
+// ✅ Realtime subscription: whenever a new room is inserted into Supabase
+useEffect(() => {
+  const channel = supabase
+    .channel("rooms-realtime")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "rooms",
+      },
+      (payload) => {
+        console.log("📢 NEW ROOM CREATED:", payload.new);
+        setRooms((prev) => [...prev, payload.new]);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
+
+
+
+  // ✅ Correct SIWE Login
+  const signIn = async () => {
     try {
-      // 1. Check for wallet
       if (!window.ethereum) {
-        alert("Please install MetaMask to use this app.");
+        alert("Please install MetaMask.");
         return;
       }
-      console.log("1. window.ethereum found.");
 
-      // 2. Create provider
+      // Auto add + switch to Hardhat local chain (31337)
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x7A69" }],
+        });
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [
+              {
+                chainId: "0x7A69",
+                chainName: "Hardhat Localhost",
+                rpcUrls: ["http://127.0.0.1:8545/"],
+                nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+              },
+            ],
+          });
+        }
+      }
+
       const provider = new ethers.BrowserProvider(window.ethereum);
-      console.log("2. Ethers provider created.");
-
-      // 3. Get signer (This should trigger the connect pop-up)
-      console.log("3. Requesting signer (this should open MetaMask)...");
       const signer = await provider.getSigner();
-      console.log("4. Signer acquired!");
-
-      // 5. Get address & network
       const address = await signer.getAddress();
       const network = await provider.getNetwork();
-      console.log(`5. Address: ${address}, Network: ${network.chainId}`);
 
-      // 6. Create the SIWE message
-      const domain = window.location.host;
-      const origin = window.location.origin;
-      const statement = "Sign in to ChainSpace to prove wallet ownership.";
-      
       const message = new SiweMessage({
-        domain,
+        domain: window.location.host,
         address,
-        statement,
-        uri: origin,
+        statement: "Sign in with Ethereum to ChainSpace.",
+        uri: window.location.origin,
         version: "1",
         chainId: Number(network.chainId),
+        nonce: Math.random().toString(36).slice(2),
       });
 
-      // 7. Ask user to sign the message
-      console.log("6. Preparing SIWE message...");
-      const preparedMessage = message.prepareMessage();
-      console.log("7. Popping up MetaMask for signature...");
-      const signature = await signer.signMessage(preparedMessage);
-      console.log("8. Signature received!");
+      const prepared = message.prepareMessage();
+      const signature = await signer.signMessage(prepared);
 
-      // 8. Send signature to our backend API
-      console.log("9. Verifying signature with backend...");
       const res = await fetch("/api/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: preparedMessage, signature }),
+        body: JSON.stringify({ message, signature }),
       });
 
       const data = await res.json();
 
-      if (res.ok && data.ok) {
-        // 9. User is authenticated!
-        console.log("10. Verification SUCCESS! User is authenticated.");
-        setAccount(data.address);
-        setIsAuthenticated(true);
-      } else {
-        throw new Error(data.error || "Verification failed via API.");
-      }
+      if (!data.ok) throw new Error(data.error || "Verification failed");
 
-    } catch (error) {
-      console.error("--- signIn FAILED ---", error);
-      alert(`Sign-in failed: ${error.message}`);
+      setAccount(data.address);
+      setIsAuthenticated(true);
+
+    } catch (err) {
+      console.error("Sign in failed:", err);
     }
   };
 
-  const createRoom = (roomName) => {
-    if (!roomName.trim() || rooms.find(r => r.id === roomName)) {
-      alert("Invalid or duplicate room name.");
+  // ✅ Create room: Blockchain + API store
+  const createRoom = async (roomName) => {
+    if (!roomName || !account) {
+      console.warn("Room name or wallet missing.");
       return;
     }
-    
-    // Create new room object
-    const newRoom = {
-      id: roomName,
-      owner: account, // The authenticated user is the owner
-      members: [account], // The owner is the first member
-    };
+// ✅ Room ID = slug (ONLY name, no timestamp)
+const roomId = roomName.toLowerCase().replace(/\s+/g, "-");
 
-    setRooms((prevRooms) => [...prevRooms, newRoom]);
-    setSelectedRoom(roomName);
-    setShowNewRoomModal(false);
+// ✅ Prevent duplicate room creation
+if (rooms.some(r => r.id === roomId)) {
+  alert("Room already exists!");
+  return;
+}
+
+    const contract = await getContract();
+    const tx = await contract.createRoom(roomId, roomName);
+    await tx.wait();
+
+    await fetch(`/api/rooms`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: roomId, name: roomName, owner: account }),
+    });
+
+    setRooms(prev => [...prev, {
+      id: roomId, name: roomName, owner: account, members: [account], createdAt: Date.now(),
+    }]);
+
+    alert("✅ Room created on blockchain!");
   };
 
-  const handleSetSelectedRoom = (roomName) => {
-    const room = rooms.find(r => r.id === roomName);
-    if (!room) return;
+  // ✅ Invite user to private room
+  const inviteToRoom = async (walletAddress) => {
+    const contract = await getContract();
+    const tx = await contract.addMember(selectedRoom, walletAddress);
+    await tx.wait();
 
-    // Check for access
-    const isPublic = room.members.includes("everyone");
-    const isMember = room.members.includes(account);
+    await fetch(`/api/rooms/${selectedRoom}/members`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wallet: walletAddress }),
+    });
 
-    if (isPublic || isMember) {
-      setSelectedRoom(roomName);
-    } else {
-      alert("Access Denied: You are not a member of this private room.");
-    }
+    alert(`✅ Member invited: ${walletAddress}`);
   };
 
-  const inviteToRoom = (userAddress) => {
-    if (!userAddress.trim()) {
-      alert("Invalid address");
-      return;
-    }
+  // ✅ Send chat message
+  const sendMessage = async () => {
+  if (!input.trim() || !account) return;
 
-    setRooms(currentRooms => 
-      currentRooms.map(room => {
-        // Find the selected room
-        if (room.id === selectedRoom) {
-          // Check if user is already a member
-          if (room.members.includes(userAddress)) {
-            alert("User is already a member.");
-            return room;
-          }
-          // Add new member
-          return {
-            ...room,
-            members: [...room.members, userAddress],
-          };
-        }
-        return room;
-      })
-    );
-    
-    alert(`Address ${userAddress.substring(0, 6)}... invited!`);
-    setShowInviteModal(false);
-  };
+  console.log("💬 trying message:", input);
 
+  const res = await fetch(`/api/rooms/${selectedRoom}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sender: account,
+      text: input.trim(),
+    }),
+  });
 
+  if (res.status === 403) {
+    alert("🚫 You are not a member of this room (on-chain access denied)");
+    return;
+  }
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    setMessages((m) => [
-      ...m, 
-      { 
-        id: Date.now(), 
-        // Use the real address if available, otherwise "you.eth"
-        user: account ? `${account.substring(0, 6)}...${account.substring(account.length - 4)}` : "you.eth", 
-        type: "text", 
-        text: input 
-      }
-    ]);
-    setInput("");
-  };
+  const data = await res.json();
 
-  const attachCode = () => {
-    if (!codeSnippet.code.trim()) return;
-    setMessages((m) => [
-      ...m,
-      {
-        id: Date.now(),
-        // Use the real address if available
-        user: account ? `${account.substring(0, 6)}...${account.substring(account.length - 4)}` : "you.eth",
-        type: "code",
-        lang: codeSnippet.lang,
-        text: codeSnippet.code,
-      },
-    ]);
-    setShowCodeModal(false);
-    setCodeSnippet({ lang: "javascript", code: "" });
-  };
+  if (!data.message) return;
 
-  const currentRoom = rooms.find(r => r.id === selectedRoom) || rooms[0];
+  setInput("");
+};
+
+const currentRoom =
+  rooms.find(r => r.id === selectedRoom) ||
+  { id: "general", name: "General", owner: "system", members: ["everyone"] };
 
   return (
     <div className="w-full max-w-7xl h-[90vh] flex rounded-2xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-2xl shadow-2xl">
+
       <Sidebar
-        connected={isAuthenticated} // Pass isAuthenticated
+        connected={isAuthenticated}
         connectWallet={signIn}
         selectedRoom={selectedRoom}
-        setSelectedRoom={handleSetSelectedRoom}
+        setSelectedRoom={setSelectedRoom}
         rooms={rooms}
-        account={account} // <-- PASS THE ACCOUNT PROP
+        account={account}
       />
 
       <ChatArea
@@ -245,35 +287,41 @@ const signIn = async () => {
         input={input}
         setInput={setInput}
         sendMessage={sendMessage}
-        connected={isAuthenticated}        
+        connected={isAuthenticated}
         setShowCodeModal={setShowCodeModal}
         setShowNewRoomModal={setShowNewRoomModal}
-        setShowInviteModal={setShowInviteModal} // <-- PASS NEW PROP
-        isOwner={currentRoom.owner === account}
+        setShowInviteModal={setShowInviteModal}
+        isOwner={
+          currentRoom?.owner &&
+          account &&
+          currentRoom.owner.toLowerCase() === account.toLowerCase()
+        }
       />
-      
+
       <RightPanel />
 
       {showCodeModal && (
         <CodeModal
           codeSnippet={codeSnippet}
           setCodeSnippet={setCodeSnippet}
-          attachCode={attachCode}
           setShowCodeModal={setShowCodeModal}
         />
       )}
+
       {showNewRoomModal && (
         <NewRoomModal
           setShowNewRoomModal={setShowNewRoomModal}
           createRoom={createRoom}
         />
       )}
+
       {showInviteModal && (
         <InviteModal
           setShowInviteModal={setShowInviteModal}
           inviteToRoom={inviteToRoom}
         />
       )}
+
     </div>
   );
 }

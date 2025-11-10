@@ -25,7 +25,7 @@ export default function Sidebar({
               : "bg-gradient-to-br from-indigo-600 to-purple-600"
           }`}
         >
-          {connected ? "Connected" : "Connect"}
+          {connected ? "Connected" : "Connect Wallet"}
         </button>
       </div>
 
@@ -42,9 +42,10 @@ export default function Sidebar({
             <div className="flex items-center justify-between">
               <span>{r.id}</span>
               {/* Show lock if not public */}
-              {!r.members.includes("everyone") && (
-                <span className="text-xs text-slate-500">🔒</span>
-              )}
+              {(r.members && !r.members.includes("everyone")) && (
+  <span className="text-xs text-slate-500">🔒</span>
+)}
+
             </div>
           </button>
         ))}
