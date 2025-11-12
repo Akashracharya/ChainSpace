@@ -10,6 +10,8 @@ import { ethers } from "ethers";
 import { SiweMessage } from "siwe";
 import { getContract } from "../lib/blockchain";
 import { supabase } from "../lib/supabase";
+import { encryptText } from "../lib/simpleCrypto";
+
 
 export default function Page() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -56,6 +58,8 @@ useEffect(() => {
   const [showNewRoomModal, setShowNewRoomModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
 
+
+    const SECRET = "teamonly-secret";
   // Load messages when room changes
   useEffect(() => {
   if (!selectedRoom) return;
@@ -197,7 +201,7 @@ useEffect(() => {
       return;
     }
 // ✅ Room ID = slug (ONLY name, no timestamp)
-const roomId = roomName.toLowerCase().replace(/\s+/g, "-");
+const roomId = `${roomName.toLowerCase()}-${Math.random().toString(36).slice(2, 6)}`;
 
 // ✅ Prevent duplicate room creation
 if (rooms.some(r => r.id === roomId)) {
@@ -243,12 +247,20 @@ if (rooms.some(r => r.id === roomId)) {
 
   console.log("💬 trying message:", input);
 
+  // 🔐 simple shared secret per room (for demo, you can make this dynamic later)
+  const SECRET = `${selectedRoom}-chainspace-secret`;
+
+  // 🔒 Encrypt the message text before sending
+  const { ciphertext, iv } = await encryptText(SECRET, input.trim());
+
   const res = await fetch(`/api/rooms/${selectedRoom}/messages`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       sender: account,
-      text: input.trim(),
+      encrypted: true, // mark encrypted
+      ciphertext,
+      iv,
     }),
   });
 
@@ -263,6 +275,7 @@ if (rooms.some(r => r.id === roomId)) {
 
   setInput("");
 };
+
 
 const currentRoom =
   rooms.find(r => r.id === selectedRoom) ||

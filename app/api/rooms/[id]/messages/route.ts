@@ -16,37 +16,62 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const roomId = params.id;
-  const { sender, text } = await req.json();
+  const { sender, text, encrypted, ciphertext, iv } = await req.json();
 
-  if (!sender || !text)
-    return NextResponse.json({ error: "sender and text required" }, { status: 400 });
+  // ✅ Validate sender
+  if (!sender || (!text && !ciphertext)) {
+    return NextResponse.json(
+      { error: "sender and text/ciphertext required" },
+      { status: 400 }
+    );
+  }
 
-  // ✅ Blockchain contract validation
+  // ✅ Blockchain access check
   const contract = getServerContract();
   const isMember = await contract.isMember(roomId, sender);
 
   if (!isMember) {
     console.log("⛔ FORBIDDEN — NOT A MEMBER:", sender);
-    return NextResponse.json({ error: "Forbidden: not a room member" }, { status: 403 });
+    return NextResponse.json(
+      { error: "Forbidden: not a room member" },
+      { status: 403 }
+    );
   }
 
-  // ✅ Store message if allowed
+  // ✅ Prepare insert data (handle both encrypted & normal messages)
+  const messagePayload: any = {
+    room_id: roomId,
+    sender,
+    created_at: new Date().toISOString(),
+  };
+
+  if (encrypted) {
+    messagePayload.encrypted = true;
+    messagePayload.ciphertext = ciphertext;
+    messagePayload.iv = iv;
+    messagePayload.text = null;
+  } else {
+    messagePayload.encrypted = false;
+    messagePayload.text = text;
+  }
+
+  // ✅ Insert into Supabase
   const { data, error } = await supabase
-  .from("messages")
-  .insert([{ room_id: roomId, sender, text }])
-  .select();
+    .from("messages")
+    .insert([messagePayload])
+    .select();
 
-if (error) {
-  console.error("❌ Supabase insert error:", error);
-  return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("❌ Supabase insert error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!data || data.length === 0) {
+    console.error("❌ No message returned from Supabase insert");
+    return NextResponse.json({ error: "Insert failed" }, { status: 500 });
+  }
+
+  console.log("✅ Message stored:", data[0]);
+  return NextResponse.json({ message: data[0] }, { status: 201 });
 }
 
-if (!data || data.length === 0) {
-  console.error("❌ No message returned from Supabase insert");
-  return NextResponse.json({ error: "Insert failed" }, { status: 500 });
-}
-
-console.log("✅ Message stored:", data[0]);
-
-return NextResponse.json({ message: data[0] }, { status: 201 });
-}

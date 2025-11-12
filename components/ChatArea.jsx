@@ -45,7 +45,7 @@ const isPublic = room?.members?.includes("everyone") ?? false;
         </div>
       </header>
 
-      <MessageList messages={messages} />
+<MessageList messages={messages} selectedRoom={selectedRoom} />
 
       <MessageInput
         input={input}
