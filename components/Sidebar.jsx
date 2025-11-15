@@ -19,7 +19,7 @@ export default function Sidebar({
         <button
           onClick={connectWallet}
           disabled={connected}
-          className={`px-3 py-1 text-sm rounded-md border ${
+          className={`px-3 py-1 text-sm rounded-full border ${
             connected
               ? "bg-slate-800 border-slate-700"
               : "bg-gradient-to-br from-indigo-600 to-purple-600"
