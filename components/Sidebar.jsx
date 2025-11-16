@@ -76,8 +76,8 @@ export default function Sidebar({
       </nav>
 
       <div className="absolute bottom-0 m-9 mx-5  text-slate-400">
-        <div className="text-[19px] pb-2 ml-3">Logged in as:</div>
-        <div className="mt-1 p-1 bg-slate-800 rounded-full px-4 text-[19px]">
+        <div className="text-[16px] pb-1.5 ml-2">Logged in as:</div>
+        <div className="mt-1 p-1 bg-slate-800 rounded-full px-5 text-[16px]">
           {formatAddress(account)}
         </div>
       </div>
