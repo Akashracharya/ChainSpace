@@ -9,6 +9,7 @@ export default function InviteModal({ setShowInviteModal, inviteToRoom }) {
     // A simple check (a real app would use ethers.isAddress)
     if (address.trim().length === 42 && address.startsWith("0x")) {
       inviteToRoom(address.trim());
+      setShowInviteModal(false);
     } else {
       alert("Please enter a valid Ethereum wallet address.");
     }

@@ -9,6 +9,7 @@ export default function NewRoomModal({ setShowNewRoomModal, createRoom }) {
     // Basic validation
     if (roomName.trim()) {
       createRoom(roomName.trim().toLowerCase().replace(/\s+/g, '-'));
+      setShowNewRoomModal(false);
     }
   };
 
