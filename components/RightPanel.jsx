@@ -1,6 +1,8 @@
 "use client";
-
+import FunAskButton from "./FunAskButton"; // add this at top
+import CodeCard from "./codeCard";
 import { useState } from "react";
+import AiInput from "./Input"
 
 export default function RightPanel() {
   const [input, setInput] = useState("");
@@ -33,43 +35,41 @@ export default function RightPanel() {
   };
 
   return (
-    <aside className="w-96 p-4 border-l border-slate-800 bg-slate-900/60 backdrop-blur-md flex flex-col">
+    <aside className="w-96 p-4 border-l border-slate-800 bg-black-/20 backdrop-blur-sm flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-semibold text-white">AI Assistant 🤖</h4>
+        <h4 className="font-semibold text-white">CSPACE AI 🤖</h4>
         <span className="text-xs text-slate-400">Context: chat helper</span>
       </div>
 
       {/* AI Response */}
-      <div className="flex-1 p-3 bg-slate-800 rounded-lg overflow-auto text-sm text-slate-300 mb-4">
+      <CodeCard>
         {loading ? (
-          <p className="italic text-slate-500">Thinking...</p>
+          <p className="italic text-slate-500 p-3">Thinking...</p>
         ) : response ? (
-          <p className="whitespace-pre-wrap">{response}</p>
+          <p className="whitespace-pre-wrap px-4">{response}</p>
         ) : (
-          <p className="italic text-slate-500">
+          <p className="italic text-slate-500 p-3">
             Ask the assistant about code, docs, or project ideas.
           </p>
         )}
-      </div>
+      </CodeCard>
+
 
       {/* Input box */}
-      <div>
-        <textarea
+      <div
+      className="pt-5">
+        <AiInput
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="w-full bg-transparent border border-slate-700 rounded p-2 h-24 text-white resize-none focus:outline-none"
+          onChange={setInput}
           placeholder="Ask AI something..."
         />
 
         <div className="mt-2 flex justify-end">
-          <button
-            onClick={handleAskAI}
-            disabled={loading}
-            className="px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium"
-          >
-            {loading ? "Thinking..." : "Ask"}
-          </button>
+          <div className="mt-2 flex justify-end">
+            <FunAskButton loading={loading} onClick={handleAskAI} />
+          </div>
+
         </div>
       </div>
 
@@ -78,10 +78,10 @@ export default function RightPanel() {
         <div className="text-xs text-slate-400 mb-2">Members</div>
         <ul className="space-y-2">
           <li className="p-2 bg-slate-800 rounded">
-            alice.eth <span className="text-slate-500 text-xs">(owner)</span>
+            akash.eth <span className="text-slate-500 text-xs">(owner)</span>
           </li>
-          <li className="p-2 bg-slate-800 rounded">bob.eth</li>
-          <li className="p-2 bg-slate-800 rounded">carol.eth</li>
+          <li className="p-2 bg-slate-800 rounded">neha.eth</li>
+          <li className="p-2 bg-slate-800 rounded">blaze.eth</li>
         </ul>
       </div>
     </aside>

@@ -282,7 +282,7 @@ const currentRoom =
   { id: "general", name: "General", owner: "system", members: ["everyone"] };
 
   return (
-    <div className="w-full max-w-7xl h-[90vh] flex rounded-2xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-2xl shadow-2xl">
+    <div className="w-full max-w-7xl h-[90vh] flex rounded-2xl overflow-hidden border border-white/10 bg-black/20 backdrop-blur-2xl ">
 
       <Sidebar
         connected={isAuthenticated}
