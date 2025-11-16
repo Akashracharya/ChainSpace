@@ -1,6 +1,8 @@
 'use client'
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
+import { GradientButton } from "../components/ui/gradient-button"
+
 
 export default function ChatArea({
   room,
@@ -28,20 +30,20 @@ const isPublic = room?.members?.includes("everyone") ?? false;
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button 
+          <GradientButton 
             onClick={() => setShowInviteModal(true)} // <-- ADD ONCLICK
             disabled={!connected || isPublic || !isOwner} // <-- ADD LOGIC
-            className="px-3 py-1 rounded bg-slate-800 border border-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="default"
           >
             Create Invite
-          </button>
-          <button 
+          </GradientButton>
+          <GradientButton 
             onClick={() => setShowNewRoomModal(true)}
             disabled={!connected}
-            className="px-3 py-1 rounded bg-gradient-to-br from-indigo-600 to-purple-600 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="variant"
           >
             New Room
-          </button>
+          </GradientButton>
         </div>
       </header>
 
