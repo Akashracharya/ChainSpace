@@ -34,7 +34,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const roomId = params.id;
-  const { sender, text, encrypted, ciphertext, iv } = await req.json();
+  const { sender, text, encrypted, ciphertext, iv, type, lang } = await req.json();
 
   // ✅ Validate sender
   if (!sender || (!text && !ciphertext)) {
@@ -71,6 +71,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   } else {
     messagePayload.encrypted = false;
     messagePayload.text = text;
+  }
+  messagePayload.type = type || 'text'; // Default to 'text' if not provided
+  if (lang) {
+    messagePayload.lang = lang;
   }
 
   // ✅ Insert into Supabase

@@ -12,10 +12,10 @@ export default function CodeMessage({ lang, code }) {
   };
 
   return (
-    <div className="mt-2 border border-white/10 rounded-md overflow-hidden">
+    <div className="mt-2 border border-white/10 rounded-xl overflow-hidden">
       {/* Header Bar */}
-      <div className="flex justify-between items-center bg-black/30 px-4 py-1.5">
-        <span className="text-xs uppercase text-slate-400 font-semibold">
+      <div className="flex justify-between items-center bg-black px-4 py-1.5">
+        <span className="text-[14px] uppercase text-slate-400 font-semibold mt-1 bg-black rounded-full  ">
           {lang}
         </span>
         <button

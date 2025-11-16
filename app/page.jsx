@@ -296,6 +296,7 @@ if (rooms.some(r => r.id === roomId)) {
       encrypted: true, // mark encrypted
       ciphertext,
       iv,
+      type: 'text', 
     }),
   });
 
@@ -310,7 +311,41 @@ if (rooms.some(r => r.id === roomId)) {
 
   setInput("");
 };
+const attachCodeMessage = async () => {
+    const { code, lang } = codeSnippet;
+    if (!code.trim() || !account) return;
 
+    console.log("💻 trying to attach code:", lang);
+    const SECRET = `${selectedRoom}-chainspace-secret`;
+
+    // We encrypt the code block just like a message
+    const { ciphertext, iv } = await encryptText(SECRET, code.trim());
+
+    const res = await fetch(`/api/rooms/${selectedRoom}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender: account,
+        encrypted: true,
+        ciphertext,
+        iv,
+        type: 'code', // ✅ SET TYPE TO 'code'
+        lang: lang,   // ✅ SEND THE LANGUAGE
+      }),
+    });
+
+    if (res.status === 403) {
+      alert("🚫 You are not a member of this room (on-chain access denied)");
+      return;
+    }
+
+    const data = await res.json();
+    if (!data.message) return;
+
+    // Reset and close modal
+    setShowCodeModal(false);
+    setCodeSnippet({ lang: "javascript", code: "" });
+  };
 
 const currentRoom =
   rooms.find(r => r.id === selectedRoom) ||
@@ -353,6 +388,7 @@ const currentRoom =
           codeSnippet={codeSnippet}
           setCodeSnippet={setCodeSnippet}
           setShowCodeModal={setShowCodeModal}
+          attachCode={attachCodeMessage}
         />
       )}
 

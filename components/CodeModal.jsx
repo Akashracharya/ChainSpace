@@ -13,7 +13,7 @@ export default function CodeModal({
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={() => setShowCodeModal(false)}
       />
-      <div className="relative z-60 w-[720px] bg-slate-900/50 border border-white/10 rounded-lg p-4 backdrop-blur-lg shadow-2xl">
+      <div className="relative z-60 w-[720px] bg-slate-900/50 border border-white/10 rounded-xl p-4 backdrop-blur-lg shadow-2xl">
         <div className="flex items-center justify-between mb-3">
           <h5 className="font-semibold">Attach Code Snippet</h5>
           <button onClick={() => setShowCodeModal(false)} className="text-slate-400 hover:text-slate-100">
