@@ -4,7 +4,25 @@ import { getServerContract } from "@/lib/server-chain";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const roomId = params.id;
+  const address = req.nextUrl.searchParams.get("address"); // 1. Get address from query
 
+  if (!address) {
+    return NextResponse.json({ error: "address is required" }, { status: 400 });
+  }
+
+  // 2. ✅ ADDED SECURITY CHECK
+  const contract = getServerContract();
+  const isMember = await contract.isMember(roomId, address);
+
+  if (!isMember) {
+    console.log("⛔ FORBIDDEN — NOT A MEMBER:", address);
+    return NextResponse.json(
+      { error: "Forbidden: not a room member" },
+      { status: 403 }
+    );
+  }
+
+  // 3. Only return data if check passes
   const { data } = await supabase
     .from("messages")
     .select("*")

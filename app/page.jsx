@@ -61,26 +61,59 @@ useEffect(() => {
 
     const SECRET = "teamonly-secret";
   // Load messages when room changes
-  useEffect(() => {
-  if (!selectedRoom) return;
+  // Load messages when room changes
+useEffect(() => {
+  // 1. Also check for 'account'
+  if (!selectedRoom || !account) {
+    setMessages([]); // Clear messages if no room or user
+    return;
+  }
 
   const load = async () => {
-    const { data } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("room_id", selectedRoom)
-      .order("created_at", { ascending: true });
+    
+    // 2. ✅ Fetch from your new secure API route
+    const res = await fetch(`/api/rooms/${selectedRoom}/messages?address=${account}`);
 
-    setMessages(data || []);
+    if (res.status === 403) {
+      // 3. Handle being denied access (e.g., Wallet 2 trying to peek)
+      console.warn("User is not a member of this room.");
+      setMessages([]); // Show an empty chat
+      return;
+    }
+    
+    if (!res.ok) {
+      console.error("Failed to fetch messages");
+      setMessages([]);
+      return;
+    }
+
+    // 4. Set messages if successful
+    const { messages } = await res.json();
+    setMessages(messages || []);
   };
 
   load();
-}, [selectedRoom]);
+}, [selectedRoom, account]); // 5. ✅ Add 'account' to the dependency array
 
 // Real-time subscription → updates message list when new message is inserted
+// Real-time subscription → triggers a secure refetch when new message is inserted
 useEffect(() => {
-  if (!selectedRoom) return;
+  // 1. Also needs 'account' to build the secure loader
+  if (!selectedRoom || !account) return;
 
+  // 2. Define the secure reload function (same as in Step 2.2)
+  const secureReloadMessages = async () => {
+    const res = await fetch(`/api/rooms/${selectedRoom}/messages?address=${account}`);
+    if (res.ok) {
+      const { messages } = await res.json();
+      setMessages(messages || []);
+    } else {
+      // Not a member, show empty list
+      setMessages([]);
+    }
+  };
+
+  // 3. Set up the listener
   const channel = supabase
     .channel(`messages-${selectedRoom}`)
     .on(
@@ -92,7 +125,9 @@ useEffect(() => {
         filter: `room_id=eq.${selectedRoom}`,
       },
       (payload) => {
-        setMessages((prev) => [...prev, payload.new]);
+        // 4. ✅ INSTEAD of adding the message, just re-run the secure loader
+        console.log("New message detected, triggering secure refetch...");
+        secureReloadMessages();
       }
     )
     .subscribe();
@@ -100,7 +135,7 @@ useEffect(() => {
   return () => {
     supabase.removeChannel(channel);
   };
-}, [selectedRoom]);
+}, [selectedRoom, account]); // 5. ✅ Add 'account' to the dependency array
 
 
 // ✅ Realtime subscription: whenever a new room is inserted into Supabase
@@ -213,15 +248,15 @@ if (rooms.some(r => r.id === roomId)) {
     const tx = await contract.createRoom(roomId, roomName);
     await tx.wait();
 
+    // ... (inside createRoom)
     await fetch(`/api/rooms`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: roomId, name: roomName, owner: account }),
     });
 
-    setRooms(prev => [...prev, {
-      id: roomId, name: roomName, owner: account, members: [account], createdAt: Date.now(),
-    }]);
+    // The optimistic setRooms() call has been removed.
+    // The real-time listener will now handle adding the room to the UI.
 
     alert("✅ Room created on blockchain!");
   };
