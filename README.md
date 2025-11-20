@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./public/assets/banner.png" width="800" alt="ChainSpace Banner"/>
+<img src="./public/assets/main.png" width="800" alt="ChainSpace Banner"/>
 
 # 🚀 ChainSpace
 ### Decentralized Encrypted Developer Chat Platform
