@@ -65,10 +65,10 @@ Messages stored in Supabase are ciphertext, not plain text.
 ## 🎥 Demo Screenshots
 
 ### Encrypted Chat Room,Connect Wallet
-"<img src=""./public/assets/demo-chat.png"" width=""400""/>","<img src=""./public/assets/demo-access-main.png"" width=""400""/>"
+"<img src="./public/assets/demo-chat.png" width="400"/>","<img src="./public/assets/demo-access-main.png" width="400"/>"
 
 ### Invite Member,AI Assistant
-"<img src=""./public/assets/invite.png"" width=""400""/>","<img src=""./public/assets/demo-ai.png"" width=""400""/>"
+"<img src="./public/assets/invite.png" width="400"/>","<img src="./public/assets/demo-ai.png" width="400"/>"
 
 ### 🔒 Access Denied: If a user attempts to access a room they are not a member of on-chain, access is blocked. 
 <img src="./public/assets/demo-access.png" width="600"/>
