@@ -46,3 +46,5 @@ Each room generates a dynamic key. Messages stored in Supabase are **ciphertext*
 ```javascript
 const SECRET = `${roomId}-chainspace-secret`;
 // Messages are encrypted/decrypted client-side
+### ⚡  4. Real-Time Messaging
+Supabase Realtime streams new messages instantly without page refreshes.
